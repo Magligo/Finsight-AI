@@ -1,0 +1,30 @@
+# Purpose: Ignore generated files, local secrets, dependency folders, and runtime artifacts.
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Environment
+.env
+backend/.env
+
+# Data and database artifacts
+*.sqlite
+*.sqlite3
+*.db
+
+# Node
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
