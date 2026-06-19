@@ -1,8 +1,10 @@
 from collections import defaultdict
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.database.base import Base
 from app.database.database import get_db
 from app.models.transaction import Transaction
 from app.services.financial_health_score import calculate_health_score
@@ -179,3 +181,47 @@ def get_insights(db: Session = Depends(get_db)):
         risk_transactions,
         health_score,
     )
+
+
+@router.delete("/api/reset-data")
+def reset_data(db: Session = Depends(get_db)):
+    # Purpose: clear persisted financial data while keeping the application schema.
+    # Dashboard analytics, charts, AI insights, and risk alerts are derived from
+    # transaction-backed data, so clearing all registered tables resets them too.
+    deleted_tables = []
+
+    for table in reversed(Base.metadata.sorted_tables):
+        result = db.execute(table.delete())
+        deleted_tables.append(
+            {
+                "table": table.name,
+                "deleted_records": result.rowcount or 0,
+            }
+        )
+
+    sequence_table_exists = db.execute(
+        text("SELECT name FROM sqlite_master WHERE type='table' AND name='sqlite_sequence'")
+    ).scalar()
+
+    if sequence_table_exists:
+        db.execute(text("DELETE FROM sqlite_sequence"))
+
+    db.commit()
+
+    return {
+        "success": True,
+        "message": "All FinSight AI data has been reset successfully.",
+        "deleted_tables": deleted_tables,
+        "dashboard": {
+            "total_spending": 0,
+            "total_transactions": 0,
+            "savings_estimate": 0,
+            "financial_health_score": 0,
+            "risk_alerts": [],
+            "insights": [],
+            "charts": {
+                "category_spending": {},
+                "monthly_spending": {},
+            },
+        },
+    }

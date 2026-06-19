@@ -73,4 +73,12 @@ export function fetchRiskAnalysis() {
 }
 
 
+export function resetData() {
+  // API request: delete all persisted financial data and reset derived dashboard state.
+  return sendRequest("/api/reset-data", {
+    method: "DELETE",
+  });
+}
+
+
 export { API_BASE_URL };
